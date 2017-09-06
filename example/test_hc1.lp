@@ -1,0 +1,10 @@
+vtx(1).
+vtx(2).
+vtx(3).
+vtx(4).
+edge(1,2).
+edge(2,1).
+edge(2,3).
+edge(3,4).
+edge(4,3).
+initialnode(1).
