@@ -369,8 +369,18 @@ bool AspProgram::sat_add_onlyif()
 {
   bool ret = true;
   
-  new_tmp_atom();
-  new_tmp_atom();
+  for (vector<Atom>::iterator ait = atoms.begin(); (ret && (ait != atoms.end())); ait++)
+  {
+    if (ait->val == l_Undef)
+    {
+        vec<Lit> l;
+        l.push(
+        if (ait->hrules.size() == 0)
+    
+          
+    }
+  }
+
   
   return ret;
 }
