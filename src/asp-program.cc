@@ -6,6 +6,7 @@
  */
 
 #include <signal.h>
+#include <sstream>
 
 #include "utils/Options.h"
 #include "utils/System.h"
@@ -278,6 +279,21 @@ void AspProgram::new_atom(int ano)
     }
 }
 
+int aspz::AspProgram::new_tmp_atom()
+{
+    Atom a;
+    int i = atoms.size();
+    
+    ostringstream os;
+    os << i;
+    a.name = "_tmp_" + os.str();
+    
+    atoms.push_back(a);
+    
+    return i;
+    
+}
+
 
 void AspProgram::dump()
 {
@@ -352,6 +368,9 @@ bool AspProgram::sat_add_if()
 bool AspProgram::sat_add_onlyif()
 {
   bool ret = true;
+  
+  new_tmp_atom();
+  new_tmp_atom();
   
   return ret;
 }
