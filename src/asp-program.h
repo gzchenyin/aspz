@@ -51,6 +51,8 @@ public:
     void dump();
 };
 
+Lit ano2lit(int ano, bool pos = true);
+
 class AspProgram
 {
 public:

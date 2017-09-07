@@ -341,6 +341,14 @@ bool AspProgram::sat_init()
   return ret;
 }
 
+Lit ano2lit(int ano, bool pos)
+{
+    if (pos)
+        return mkLit(ano -1);
+    else
+        return ~mkLit(ano - 1);
+}
+
 bool AspProgram::sat_add_if()
 {
   bool ret = true;
@@ -351,12 +359,15 @@ bool AspProgram::sat_add_if()
     for (vector<Var>::iterator it = rit->head.begin(); it != rit->head.end(); it++)
     {
       //cout << "**" << *it-1 << " " << mkLit(*it-1).x << "  " << (~mkLit(*it-1)).x << endl;
-      l.push(mkLit(*it-1));
+      //l.push(mkLit(*it-1));
+      l.push(ano2lit(*it));
     }
     for (vector<Var>::iterator it = rit->pos.begin(); it != rit->pos.end(); it++)
-      l.push(~mkLit(*it-1));
+      //l.push(~mkLit(*it-1));
+      l.push(ano2lit(*it, false));
     for (vector<Var>::iterator it = rit->neg.begin(); it != rit->neg.end(); it++)
-      l.push(mkLit(*it-1));
+      //l.push(mkLit(*it-1));
+      l.push(ano2lit(*it));
     
     printVec(l);
     ret = sat_solver.addClause_(l);
@@ -374,8 +385,9 @@ bool AspProgram::sat_add_onlyif()
     if (ait->val == l_Undef)
     {
         vec<Lit> l;
-        l.push(
         if (ait->hrules.size() == 0)
+        {
+            l.push(
     
           
     }
