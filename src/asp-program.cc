@@ -26,6 +26,15 @@ void printVec(vec<Lit>& l)
   cout << endl;
 }
 
+Lit ano2lit(int ano, bool pos)
+{
+    if (pos)
+        return mkLit(ano -1);
+    else
+        return ~mkLit(ano - 1);
+}
+
+
 void Atom::dump()
 {
   cout << name;
@@ -71,9 +80,13 @@ AspProgram::AspProgram()
 {
   Atom a;
   a.name = "_empty";
+  a.ano = 0;
+  a.val = l_False;
   atoms.push_back(a);
   
   a.name = "_false";
+  a.ano = 1;
+  a.val = l_False;
   atoms.push_back(a);
 }
 
@@ -83,7 +96,10 @@ AspProgram::~AspProgram()
 
 bool AspProgram::read(ifstream& i)
 {
-  return read_lparse(i);
+    bool ret = read_lparse(i);
+    atom_num = atoms.size();
+    
+    return ret;
 }
 
 bool AspProgram::read_lparse(ifstream& i)
@@ -274,6 +290,7 @@ void AspProgram::new_atom(int ano)
     
     while ( ano >= i )
     {
+        a.ano = i;
         i++;
         atoms.push_back( a );
     }
@@ -286,9 +303,11 @@ int aspz::AspProgram::new_tmp_atom()
     
     ostringstream os;
     os << i;
+    a.ano = i;
     a.name = "_tmp_" + os.str();
     
     atoms.push_back(a);
+    sat_solver.newVar();
     
     return i;
     
@@ -341,12 +360,10 @@ bool AspProgram::sat_init()
   return ret;
 }
 
-Lit ano2lit(int ano, bool pos)
+bool AspProgram::sat_add_clause(vec<Lit>& l)
 {
-    if (pos)
-        return mkLit(ano -1);
-    else
-        return ~mkLit(ano - 1);
+    printVec(l);
+    return sat_solver.addClause_(l);
 }
 
 bool AspProgram::sat_add_if()
@@ -369,8 +386,7 @@ bool AspProgram::sat_add_if()
       //l.push(mkLit(*it-1));
       l.push(ano2lit(*it));
     
-    printVec(l);
-    ret = sat_solver.addClause_(l);
+    ret = sat_add_clause(l);
   }
 
   return ret;
@@ -382,18 +398,75 @@ bool AspProgram::sat_add_onlyif()
   
   for (vector<Atom>::iterator ait = atoms.begin(); (ret && (ait != atoms.end())); ait++)
   {
-    if (ait->val == l_Undef)
+    if ((ait->ano < atom_num) && (ait->val == l_Undef))
     {
-        vec<Lit> l;
+ait->dump();
+
         if (ait->hrules.size() == 0)
         {
-            l.push(
-    
-          
+            //no rule for this atom
+            vec<Lit> l;
+            l.push(ano2lit(ait->ano, false));
+            ret = sat_add_clause(l);;
+        }
+        else if (ait->hrules.size() == 1)
+        {
+            //only one rule for this atom
+            for (vector<int>::iterator bit = rules[ait->hrules[0]].pos.begin();
+                 (ret && (bit != rules[ait->hrules[0]].pos.end())); bit++)
+            {
+                vec<Lit> l;
+                l.push(ano2lit(ait->ano, false));
+                l.push(ano2lit(*bit));
+                ret = sat_add_clause(l);
+            }
+            for (vector<int>::iterator bit = rules[ait->hrules[0]].neg.begin();
+                 (ret && (bit != rules[ait->hrules[0]].neg.end())); bit++)
+            {
+                vec<Lit> l;
+                l.push(ano2lit(ait->ano, false));
+                l.push(ano2lit(*bit, false));
+                ret = sat_add_clause(l);
+            }
+        }
+        else
+        {
+            //more than one rules for this atom
+            //need to add new atoms
+            vec<Lit> l;
+            l.push(ano2lit(ait->ano, false));
+            
+            for (vector<int>::iterator rit = ait->hrules.begin();
+                 (ret && (rit != ait->hrules.end())); rit++)
+            {
+                rules[*rit].dump();
+                
+                int abd = new_tmp_atom();
+                l.push(ano2lit(abd));
+                
+                for (vector<int>::iterator bit = rules[*rit].pos.begin();
+                    (ret && (bit != rules[*rit].pos.end())); bit++)
+                {
+                    vec<Lit> bl;
+                    bl.push(ano2lit(abd, false));
+                    bl.push(ano2lit(*bit));
+                    ret = sat_add_clause(bl);
+                }
+                for (vector<int>::iterator bit = rules[*rit].neg.begin();
+                    (ret && (bit != rules[*rit].neg.end())); bit++)
+                {
+                    vec<Lit> bl;
+                    bl.push(ano2lit(abd, false));
+                    bl.push(ano2lit(*bit, false));
+                    ret = sat_add_clause(bl);
+                }
+            }
+            if (ret)
+                ret = sat_add_clause(l);
+        }
     }
+    
   }
-
-  
   return ret;
 }
 

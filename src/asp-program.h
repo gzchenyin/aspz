@@ -20,6 +20,9 @@
 using namespace Minisat;
 using namespace std;
 
+Lit ano2lit(int ano, bool pos = true);
+void printVec(vec<Lit>& l);
+
 namespace aspz{
 //supported rule type from lparse
 enum RuleType {
@@ -32,6 +35,8 @@ class Atom
 {
 public:
     Atom(){val = l_Undef;};
+    
+    int ano;
     string name;
     lbool val;  //truth value of the atom
     vector<int> hrules; //the head of the rules
@@ -44,14 +49,13 @@ class Rule
 {
 public:
     Rule(){};
-    vector<Var> head;
-    vector<Var> pos;
-    vector<Var> neg;
+    vector<int> head;
+    vector<int> pos;
+    vector<int> neg;
     
     void dump();
 };
 
-Lit ano2lit(int ano, bool pos = true);
 
 class AspProgram
 {
@@ -59,6 +63,7 @@ public:
     AspProgram();
     ~AspProgram();
     vector<Atom> atoms;
+    int atom_num;
     vector<Rule> rules;
     Solver sat_solver;
     
@@ -78,6 +83,8 @@ public:
     bool sat_init();
     bool sat_add_if();
     bool sat_add_onlyif();
+    
+    bool sat_add_clause(vec<Lit>& l);
     
     lbool asp_solve();
     CRef sat_propagate(); 
