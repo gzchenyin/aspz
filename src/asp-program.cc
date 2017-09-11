@@ -362,7 +362,7 @@ bool AspProgram::sat_init()
 
 bool AspProgram::sat_add_clause(vec<Lit>& l)
 {
-    printVec(l);
+    //printVec(l);
     return sat_solver.addClause_(l);
 }
 
@@ -396,35 +396,33 @@ bool AspProgram::sat_add_onlyif()
 {
   bool ret = true;
   
-  for (vector<Atom>::iterator ait = atoms.begin(); (ret && (ait != atoms.end())); ait++)
+  for (int a = 0; a < atom_num; a++)
   {
-    if ((ait->ano < atom_num) && (ait->val == l_Undef))
+    if (atoms[a].val == l_Undef)
     {
-ait->dump();
-
-        if (ait->hrules.size() == 0)
+        if (atoms[a].hrules.size() == 0)
         {
             //no rule for this atom
             vec<Lit> l;
-            l.push(ano2lit(ait->ano, false));
+            l.push(ano2lit(atoms[a].ano, false));
             ret = sat_add_clause(l);;
         }
-        else if (ait->hrules.size() == 1)
+        else if (atoms[a].hrules.size() == 1)
         {
             //only one rule for this atom
-            for (vector<int>::iterator bit = rules[ait->hrules[0]].pos.begin();
-                 (ret && (bit != rules[ait->hrules[0]].pos.end())); bit++)
+            for (vector<int>::iterator bit = rules[atoms[a].hrules[0]].pos.begin();
+                 (ret && (bit != rules[atoms[a].hrules[0]].pos.end())); bit++)
             {
                 vec<Lit> l;
-                l.push(ano2lit(ait->ano, false));
+                l.push(ano2lit(a, false));
                 l.push(ano2lit(*bit));
                 ret = sat_add_clause(l);
             }
-            for (vector<int>::iterator bit = rules[ait->hrules[0]].neg.begin();
-                 (ret && (bit != rules[ait->hrules[0]].neg.end())); bit++)
+            for (vector<int>::iterator bit = rules[atoms[a].hrules[0]].neg.begin();
+                 (ret && (bit != rules[atoms[a].hrules[0]].neg.end())); bit++)
             {
                 vec<Lit> l;
-                l.push(ano2lit(ait->ano, false));
+                l.push(ano2lit(a, false));
                 l.push(ano2lit(*bit, false));
                 ret = sat_add_clause(l);
             }
@@ -434,12 +432,12 @@ ait->dump();
             //more than one rules for this atom
             //need to add new atoms
             vec<Lit> l;
-            l.push(ano2lit(ait->ano, false));
+            l.push(ano2lit(a, false));
             
-            for (vector<int>::iterator rit = ait->hrules.begin();
-                 (ret && (rit != ait->hrules.end())); rit++)
+            for (vector<int>::iterator rit = atoms[a].hrules.begin();
+                 (ret && (rit != atoms[a].hrules.end())); rit++)
             {
-                rules[*rit].dump();
+                //rules[*rit].dump();
                 
                 int abd = new_tmp_atom();
                 l.push(ano2lit(abd));
